@@ -21,3 +21,4 @@ prisma/dev.db
 prisma/dev.db-journal
 src/uploads/*
 !src/uploads/.gitkeep
+/src/generated/prisma
