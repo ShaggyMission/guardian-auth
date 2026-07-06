@@ -1,39 +1,33 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import compression from "compression";
-import morgan from "morgan";
-import prisma from "./config/prisma.js";
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+
+const { port, nodeEnv } = require('./config/env');
+const userRoutes = require('./routes/userRoutes');
+const analysisRoutes = require('./routes/analysisRoutes');
+const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 
-app.use(cors());
 app.use(helmet());
-app.use(compression());
-app.use(morgan("dev"));
+app.use(cors()); // en produccion, restringe "origin" al dominio/app real
+app.use(morgan(nodeEnv === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
 
-app.get("/", async (req, res) => {
-  try {
-    await prisma.$connect();
-
-    res.json({
-      status: "Guardian Auth API",
-      version: "1.0",
-      database: "Conectada",
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "Guardian Auth API",
-      version: "1.0",
-      database: "Error",
-      error: error.message,
-    });
-  }
+app.get('/health', (req, res) => {
+  res.json({ ok: true, servicio: 'guardian-auth' });
 });
 
-const PORT = process.env.PORT || 3000;
+app.use('/api/usuarios', userRoutes);
+app.use('/api/analisis', analysisRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Servidor iniciado en http://localhost:${PORT}`);
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada.' });
+});
+
+app.use(errorHandler);
+
+app.listen(port, () => {
+  console.log(`guardian-auth escuchando en el puerto ${port} (${nodeEnv})`);
 });
