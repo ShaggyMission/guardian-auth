@@ -1,23 +1,20 @@
 const { Pool } = require('pg');
-const { databaseUrl, nodeEnv } = require('./env');
+require('dotenv').config();
 
 const pool = new Pool({
-  connectionString: databaseUrl,
-  ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
-pool.on('error', (err) => {
-  console.error('Error inesperado en el pool de PostgreSQL:', err);
-});
-
-async function query(text, params) {
-  const start = Date.now();
-  const result = await pool.query(text, params);
-  const duration = Date.now() - start;
-  if (nodeEnv === 'development') {
-    console.log('SQL ejecutado', { text, duration, filas: result.rowCount });
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Error conectando a PostgreSQL:', err.stack);
+  } else {
+    console.log('🚀 Conectado con éxito a la base de datos PostgreSQL:', process.env.DB_NAME);
   }
-  return result;
-}
+});
 
-module.exports = { pool, query };
+module.exports = pool;
