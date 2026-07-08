@@ -2,7 +2,6 @@ const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// 1. REGISTRO NATIVO DE USUARIOS
 const register = async (req, res) => {
   const { nombre, email, password } = req.body;
 
@@ -11,16 +10,13 @@ const register = async (req, res) => {
   }
 
   try {
-    // Verificar si el email ya existe
     const userExist = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     if (userExist.rows.length > 0) {
       return res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
     }
 
-    // Encriptar la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insertar en la tabla usuarios de tu base de datos postgres
     const query = `
       INSERT INTO usuarios (nombre, email, password) 
       VALUES ($1, $2, $3) 
@@ -38,7 +34,6 @@ const register = async (req, res) => {
   }
 };
 
-// 2. INICIO DE SESIÓN
 const login = async (req, res) => {
   const { email, password } = req.body;
 
